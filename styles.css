@@ -6,7 +6,6 @@ body {
     margin: 0;
     padding: 0;
     overflow-x: hidden;
-    cursor: none; /* Désactive le curseur par défaut */
 }
 
 /* En-tête */
@@ -72,7 +71,7 @@ ul li {
 }
 
 ul li strong {
-    cursor: pointer; /* Change le curseur pour les mots en gras */
+    cursor: default; /* Change le curseur pour les mots en gras */
 }
 
 ul li:hover {
@@ -157,6 +156,17 @@ body:hover::after {
     }
 }
 
+#character {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 30px;
+    height: 30px;
+    background-color: red;
+    border-radius: 50%;
+    transition: transform 0.1s linear;
+}
+
 /* Animation pour le curseur */
 @keyframes fadeIn {
     0% {
@@ -187,3 +197,4 @@ body:hover::after {
         font-size: 1em;
     }
 }
+
