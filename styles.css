@@ -6,9 +6,10 @@ body {
     margin: 0;
     padding: 0;
     overflow-x: hidden;
+    cursor: none; /* Désactive le curseur par défaut */
 }
 
-/* Effet lumineux et ombre sur l’en-tête */
+/* En-tête */
 header {
     text-align: center;
     padding: 60px;
@@ -56,7 +57,7 @@ h2 {
     animation: fadeIn 1.8s ease-in-out;
 }
 
-/* Style des compétences avec un effet de survol */
+/* Compétences - Modification du curseur */
 ul {
     list-style-type: none;
     padding: 0;
@@ -70,11 +71,15 @@ ul li {
     transition: color 0.3s ease;
 }
 
+ul li strong {
+    cursor: pointer; /* Change le curseur pour les mots en gras */
+}
+
 ul li:hover {
     color: #58a6ff;
 }
 
-/* Style des articles de projets avec effet de carte */
+/* Articles de projets sans effet de survol */
 article {
     margin-bottom: 20px;
     padding: 20px;
@@ -82,12 +87,6 @@ article {
     border-left: 4px solid #58a6ff;
     border-radius: 8px;
     box-shadow: 0px 4px 15px rgba(0, 123, 255, 0.15);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-article:hover {
-    transform: translateY(-5px);
-    box-shadow: 0px 8px 30px rgba(0, 123, 255, 0.25);
 }
 
 article h3 {
@@ -131,7 +130,34 @@ a:hover {
     color: #1f6feb;
 }
 
-/* Animations */
+/* Effet de lueur autour du curseur */
+body::after {
+    content: '';
+    position: fixed;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(88, 166, 255, 0.3);
+    pointer-events: none;
+    transition: transform 0.1s ease;
+    mix-blend-mode: screen;
+}
+
+body:hover::after {
+    animation: glow 2s infinite;
+}
+
+/* Animation de lueur autour du curseur */
+@keyframes glow {
+    0%, 100% {
+        box-shadow: 0 0 10px 5px rgba(88, 166, 255, 0.3), 0 0 20px 15px rgba(88, 166, 255, 0.2);
+    }
+    50% {
+        box-shadow: 0 0 20px 10px rgba(88, 166, 255, 0.4), 0 0 30px 20px rgba(88, 166, 255, 0.3);
+    }
+}
+
+/* Animation pour le curseur */
 @keyframes fadeIn {
     0% {
         opacity: 0;
