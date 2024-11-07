@@ -40,8 +40,45 @@ function moveVertically() {
 
         requestAnimationFrame(step);
     }
-
+    checkSurroundingSections()
     step();
+}
+
+function checkSurroundingSections(cursorX) {
+    const characterX = character.offsetLeft;
+    const characterY = character.offsetTop;
+    let isSafe = false;
+
+    document.querySelectorAll("section").forEach(section => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = rect.top + window.scrollY;
+        const sectionBottom = rect.bottom + window.scrollY;
+        const sectionLeft = rect.left + window.scrollX;
+        const sectionRight = rect.right + window.scrollX;
+
+        // Vérifie si le personnage est entre le haut et le bas de la section
+        // et si la section couvre la position gauche ou droite du personnage
+        if (
+            characterY >= sectionTop &&
+            characterY <= sectionBottom &&
+            (sectionLeft == characterX || sectionRight == characterX + character.offsetWidth)
+        ) {
+            isSafe = true;
+        }
+    });
+
+    // Si aucune section ne couvre horizontalement, déplacer le personnage vers le mur le plus proche
+    if (!isSafe) {
+        // const leftDistance = characterX;
+        // const rightDistance = window.innerWidth - characterX - characterSize;
+        
+        // if (leftDistance < rightDistance) {
+        //     character.style.left = `0px`; // Déplacer vers le mur gauche
+        // } else {
+        //     character.style.left = `${window.innerWidth - characterSize}px`; // Déplacer vers le mur droit
+        // }
+        console.log("ok")
+    }
 }
 
 // Trouve le mur le plus proche à gauche et à droite de la balle au même niveau vertical
@@ -61,13 +98,14 @@ function findClosestWalls(cursorX) {
 
         // Vérifie si la balle est à la même hauteur que la section
         if (characterY >= sectionTop && characterY <= sectionBottom) {
+
             // Si le mur est à gauche et plus proche que le précédent
             if (sectionRight < characterX && sectionRight > closestLeft) {
                 closestLeft = sectionRight;
             }
             // Si le mur est à droite et plus proche que le précédent
             if (sectionLeft > characterX && sectionLeft < closestRight) {
-                closestRight = sectionLeft;
+                closestRight = sectionLeft - characterSize;
             }
         }
     });
@@ -79,10 +117,8 @@ function findClosestWalls(cursorX) {
 
     if (distanceToLeftWall < distanceToCursor && distanceToLeftWall < distanceToRightWall) {
         character.style.left = `${closestLeft}px`; // Déplacer vers le mur gauche
-        console.log("La balle s'est déplacée vers le mur le plus proche à gauche:", closestLeft);
     } else if (distanceToRightWall < distanceToCursor && distanceToRightWall < distanceToLeftWall) {
         character.style.left = `${closestRight}px`; // Déplacer vers le mur droit
-        console.log("La balle s'est déplacée vers le mur le plus proche à droite:", closestRight);
     }
 }
 
