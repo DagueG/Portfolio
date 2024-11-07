@@ -34,7 +34,7 @@ header p {
 /* Sections avec dégradé et animation de transition */
 section {
     padding: 40px;
-    margin: 30px auto;
+    margin: 40px auto;
     background: rgba(28, 31, 38, 0.9);
     border-radius: 12px;
     width: 80%;

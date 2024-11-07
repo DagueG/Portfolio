@@ -3,7 +3,6 @@ const characterSize = 30; // Taille du personnage (assumée ici comme un carré 
 let targetY; // La position cible en Y
 const speed = 2; // Vitesse constante pour les mouvements
 let isMoving = false; // Flag pour contrôler le mouvement continu
-let currentSide = "left"; // Indicateur du côté où se trouve le personnage (gauche ou droite)
 
 // Positionner le personnage en bas à gauche de la page au chargement
 window.addEventListener("load", () => {
@@ -45,71 +44,45 @@ function moveVertically() {
     step();
 }
 
-// Vérifie l'obstacle le plus proche à droite (si sur le bord gauche) ou à gauche (si sur le bord droit)
-function checkAndJump(cursorX) {
-    let characterX = currentSide === "left" ? 0 : window.innerWidth - characterSize; // Position actuelle de la balle
-    let closestObstacle;
-    let distanceToObstacle;
+// Trouve le mur le plus proche à gauche et à droite de la balle au même niveau vertical
+function findClosestWalls(cursorX) {
+    const characterX = character.offsetLeft;
+    const characterY = character.offsetTop;
+    let closestLeft = 0; // Bordure gauche de la fenêtre
+    let closestRight = window.innerWidth - characterSize; // Bordure droite de la fenêtre
 
-    if (currentSide === "left") {
-        // Initialise leftmostBorder avec le côté droit de l'écran
-        let leftmostBorder = window.innerWidth - characterSize;
-    
-        // Parcours chaque section pour trouver le bord gauche le plus proche à droite de la balle
-        document.querySelectorAll("section").forEach(section => {
-            const rect = section.getBoundingClientRect();
-            const sectionTop = rect.top + window.scrollY;
-            const sectionBottom = rect.bottom + window.scrollY;
-            const sectionLeft = rect.left + window.scrollX;
-    
-            // Vérifie si la balle est alignée verticalement avec la section
-            if (character.offsetTop <= sectionTop && character.offsetTop >= sectionBottom) {
-                // Si le bord gauche de la section est plus à gauche que le leftmostBorder actuel
-                if (sectionLeft < leftmostBorder) {
-                    leftmostBorder = sectionLeft;
-                }
+    // Parcours des sections pour trouver les murs les plus proches
+    document.querySelectorAll("section").forEach(section => {
+        const rect = section.getBoundingClientRect();
+        const sectionTop = rect.top + window.scrollY;
+        const sectionBottom = rect.bottom + window.scrollY;
+        const sectionLeft = rect.left + window.scrollX;
+        const sectionRight = rect.right + window.scrollX;
+
+        // Vérifie si la balle est à la même hauteur que la section
+        if (characterY >= sectionTop && characterY <= sectionBottom) {
+            // Si le mur est à gauche et plus proche que le précédent
+            if (sectionRight < characterX && sectionRight > closestLeft) {
+                closestLeft = sectionRight;
             }
-        });
-    
-        // Calcul de la distance jusqu'au leftmostBorder
-        closestObstacle = leftmostBorder;
-        distanceToObstacle = Math.abs(leftmostBorder - cursorX);
-    } else {
-        // Initialise rightmostBorder avec le côté gauche de l'écran
-        let rightmostBorder = 0;
-    
-        // Parcours chaque section pour trouver le bord droit le plus proche à gauche de la balle
-        document.querySelectorAll("section").forEach(section => {
-            const rect = section.getBoundingClientRect();
-            const sectionTop = rect.top + window.scrollY;
-            const sectionBottom = rect.bottom + window.scrollY;
-            const sectionRight = rect.right + window.scrollX;
-    
-            // Vérifie si la balle est alignée verticalement avec la section
-            if (character.offsetTop <= sectionTop && character.offsetTop >= sectionBottom) {
-                // Si le bord droit de la section est plus à droite que le rightmostBorder actuel
-                if (sectionRight > rightmostBorder) {
-                    rightmostBorder = sectionRight;
-                }
+            // Si le mur est à droite et plus proche que le précédent
+            if (sectionLeft > characterX && sectionLeft < closestRight) {
+                closestRight = sectionLeft;
             }
-        });
-    
-        // Calcul de la distance jusqu'au rightmostBorder
-        closestObstacle = rightmostBorder;
-        distanceToObstacle = Math.abs(cursorX - rightmostBorder);
-    }
+        }
+    });
 
-    // Log pour voir la position X de la balle, l'obstacle le plus proche et la souris
-    console.log("Coté de la balle:", currentSide);
-    console.log("Position X de la balle:", characterX);
-    console.log("Position X de l'obstacle le plus proche:", closestObstacle.x);
-    console.log("Position X de la souris:", cursorX);
-
-    // Sauter si le curseur est plus proche de l'obstacle que de la position actuelle de la balle
+    // Déterminer si la balle doit se déplacer vers le mur le plus proche
     const distanceToCursor = Math.abs(cursorX - characterX);
-    if (distanceToCursor > distanceToObstacle) {
-        character.style.left = `${closestObstacle.x}px`;
-        currentSide = closestObstacle.x === 0 ? "left" : "right"; // Mettre à jour le côté actuel
+    const distanceToLeftWall = Math.abs(closestLeft - cursorX);
+    const distanceToRightWall = Math.abs(closestRight - cursorX);
+
+    if (distanceToLeftWall < distanceToCursor && distanceToLeftWall < distanceToRightWall) {
+        character.style.left = `${closestLeft}px`; // Déplacer vers le mur gauche
+        console.log("La balle s'est déplacée vers le mur le plus proche à gauche:", closestLeft);
+    } else if (distanceToRightWall < distanceToCursor && distanceToRightWall < distanceToLeftWall) {
+        character.style.left = `${closestRight}px`; // Déplacer vers le mur droit
+        console.log("La balle s'est déplacée vers le mur le plus proche à droite:", closestRight);
     }
 }
 
@@ -117,5 +90,5 @@ function checkAndJump(cursorX) {
 window.addEventListener("mousemove", (e) => {
     targetY = e.clientY + window.scrollY; // Prendre en compte le défilement vertical
     moveVertically(); // Appeler la fonction de mouvement vertical
-    checkAndJump(e.clientX + window.scrollX); // Vérifie s'il doit sauter vers un mur ou le bord d'une section
+    findClosestWalls(e.clientX + window.scrollX); // Vérifie et déplace la balle si nécessaire
 });
