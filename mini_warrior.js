@@ -1,83 +1,94 @@
 const character = document.getElementById("character");
 const characterSize = 30; // Taille du personnage (assumée ici comme un carré de 30x30px)
-let targetY; // La position cible en Y
-const speed = 2; // Vitesse constante pour les mouvements
-let isMoving = false; // Flag pour contrôler le mouvement continu
+let targetY;
+const speed = 5;
+let isMoving = false;
+let sectionHeights = []; // Déclaration de sectionHeights en tant que variable globale
+let mouseX = 0;
+let mouseY = 0;
+let sectionLeft, sectionRight;
 
-// Positionner le personnage en bas à gauche de la page au chargement
-window.addEventListener("load", () => {
-    character.style.left = `0px`; // Collé au bord gauche
-    character.style.top = `${document.body.offsetHeight - characterSize}px`; // En bas de la page
-});
-
-// Déplacement uniquement sur l'axe Y pour suivre le curseur
-function moveVertically() {
-    if (isMoving) return; // Empêche les mouvements multiples simultanés
-    isMoving = true;
-
-    function step() {
-        let currentY = character.offsetTop;
-
-        // Limiter la position de la balle pour qu'elle ne dépasse pas le bord supérieur ou inférieur
-        if (targetY < 0) targetY = 0; // Limite supérieure
-        if (targetY > document.body.offsetHeight - characterSize) {
-            targetY = document.body.offsetHeight - characterSize; // Limite inférieure
-        }
-
-        // Si le personnage est déjà proche de la cible en Y, on arrête le mouvement
-        if (Math.abs(currentY - targetY) <= speed) {
-            character.style.top = `${targetY}px`;
-            isMoving = false;
-            return;
-        }
-
-        // Déplacement en fonction de la position cible sur l'axe Y
-        if (currentY < targetY) currentY += speed; // Descendre
-        else if (currentY > targetY) currentY -= speed; // Monter
-
-        // Mettre à jour la position du personnage
-        character.style.top = `${currentY}px`;
-
-        requestAnimationFrame(step);
-    }
-    checkSurroundingSections()
-    step();
-}
-
-function checkSurroundingSections(cursorX) {
-    const characterX = character.offsetLeft;
-    const characterY = character.offsetTop;
-    let isSafe = false;
+function get_heights() {
+    const heights = [];
 
     document.querySelectorAll("section").forEach(section => {
         const rect = section.getBoundingClientRect();
         const sectionTop = rect.top + window.scrollY;
         const sectionBottom = rect.bottom + window.scrollY;
-        const sectionLeft = rect.left + window.scrollX;
-        const sectionRight = rect.right + window.scrollX;
 
-        // Vérifie si le personnage est entre le haut et le bas de la section
-        // et si la section couvre la position gauche ou droite du personnage
-        if (
-            characterY >= sectionTop &&
-            characterY <= sectionBottom &&
-            (sectionLeft == characterX || sectionRight == characterX + character.offsetWidth)
-        ) {
+        // Ajouter la combinaison { top, bottom } dans la liste heights
+        heights.push({ top: sectionTop, bottom: sectionBottom });
+    });
+
+    return heights;
+}
+
+// Déplacement uniquement sur l'axe Y pour suivre le curseur
+function moveVertically() {
+    if (isMoving) return;
+    isMoving = true;
+    character.classList.add("run"); // Ajouter l'animation de course
+    
+    function step() {
+        let currentY = character.offsetTop;
+
+        // Limiter la position pour éviter que le personnage sorte des bords
+        if (targetY < 0) targetY = 0;
+
+
+        // Détecter la direction verticale
+        if (currentY < targetY) {
+            // Descend
+            character.classList.add("face-down");
+            character.classList.remove("face-up");
+        } else if (currentY > targetY) {
+            // Monte
+            character.classList.add("face-up");
+            character.classList.remove("face-down");
+        }
+
+
+        if (targetY > document.body.offsetHeight - characterSize) {
+            targetY = document.body.offsetHeight - characterSize;
+        }
+
+        if (Math.abs(currentY - targetY) <= speed) {
+            character.style.top = `${targetY}px`;
+            isMoving = false;
+            character.classList.remove("run"); // Retirer l'animation de course
+            return;
+        }
+
+        if (currentY < targetY) currentY += speed;
+        else if (currentY > targetY) currentY -= speed;
+
+        character.style.top = `${currentY}px`;
+        requestAnimationFrame(step);
+    }
+    step();
+}
+
+function checkSurroundingSections(cursorX, sectionHeightsParam = sectionHeights) {
+    const characterX = character.offsetLeft;
+    const characterY = character.offsetTop;
+    let isSafe = false;
+
+    // Use sectionHeightsParam instead of sectionHeights directly
+    sectionHeightsParam.forEach(({ top, bottom }) => {
+        if (characterY >= top && characterY <= bottom) {
             isSafe = true;
         }
     });
 
-    // Si aucune section ne couvre horizontalement, déplacer le personnage vers le mur le plus proche
     if (!isSafe) {
-        // const leftDistance = characterX;
-        // const rightDistance = window.innerWidth - characterX - characterSize;
-        
-        // if (leftDistance < rightDistance) {
-        //     character.style.left = `0px`; // Déplacer vers le mur gauche
-        // } else {
-        //     character.style.left = `${window.innerWidth - characterSize}px`; // Déplacer vers le mur droit
-        // }
-        console.log("ok")
+        const leftDistance = characterX;
+        const rightDistance = window.innerWidth - characterX - characterSize;
+
+        if (leftDistance < rightDistance) {
+            character.style.left = `0px`;
+        } else {
+            character.style.left = `${window.innerWidth - characterSize}px`;
+        }
     }
 }
 
@@ -122,9 +133,57 @@ function findClosestWalls(cursorX) {
     }
 }
 
+function updateWallPosition() {
+    const characterX = character.offsetLeft;
+
+    if (character.offsetLeft <= 0) {
+        // Ninja est sur le mur de gauche
+        character.classList.add("left-wall");
+        character.classList.remove("right-wall");
+    } else if (character.offsetLeft >= window.innerWidth - characterSize) {
+        // Ninja est sur le mur de droite
+        character.classList.add("right-wall");
+        character.classList.remove("left-wall");
+    } else if (characterX <= sectionLeft) {
+        // Ninja est sur le mur droit (section gauche)
+        character.classList.add("right-wall");
+        character.classList.remove("left-wall");
+    } else if (characterX >= sectionRight - characterSize) {
+        // Ninja est sur le mur gauche (section droite)
+        character.classList.add("left-wall");
+        character.classList.remove("right-wall");
+    } else {
+        // Ninja n'est pas sur les murs de la section
+        character.classList.remove("left-wall", "right-wall");
+    }
+
+}
+
+// Appeler get_heights au chargement de la page pour initialiser sectionHeights
+window.addEventListener("load", () => {
+    sectionHeights = get_heights(); // Stockage des hauteurs dans la variable globale
+    character.style.left = `0px`;
+    character.style.top = `${document.body.offsetHeight - characterSize}px`;
+    const firstSection = document.querySelector("section");
+    if (firstSection) {
+        const rect = firstSection.getBoundingClientRect();
+        sectionLeft = rect.left + window.scrollX;
+        sectionRight = rect.right + window.scrollX;
+    }
+});
+
 // Suivre la position verticale du curseur sur l'axe Y uniquement
 window.addEventListener("mousemove", (e) => {
-    targetY = e.clientY + window.scrollY; // Prendre en compte le défilement vertical
-    moveVertically(); // Appeler la fonction de mouvement vertical
-    findClosestWalls(e.clientX + window.scrollX); // Vérifie et déplace la balle si nécessaire
+    mouseX = e.clientX + window.scrollX; // Position horizontale avec défilement
+    mouseY = e.clientY + window.scrollY; // Position verticale avec défilement
 });
+
+setInterval(() => {
+    // Utiliser la position de la souris pour les fonctions nécessaires
+    targetY = mouseY; // Mettre à jour la position verticale cible
+    moveVertically(); // Appeler la fonction de mouvement vertical
+    findClosestWalls(mouseX); // Appeler avec la position X de la souris
+    // Appeler la fonction de vérification des sections environnantes
+    checkSurroundingSections(null, sectionHeights);
+    updateWallPosition();
+}, 100);

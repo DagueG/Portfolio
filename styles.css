@@ -162,9 +162,67 @@ body:hover::after {
     left: 50%;
     width: 30px;
     height: 30px;
-    background-color: red;
-    border-radius: 50%;
+    background-image: url("ninjameditation.webp"); /* Image du ninja en méditation */
+    background-size: cover;
     transition: transform 0.1s linear;
+}
+
+/* Animation de repos pour le mur de gauche */
+#character.left-wall {
+    background-image: url("ninjaShuriken.webp"); /* Sprite d'animation de repos */
+    background-size: 90px 30px; /* Largeur totale de 3 frames, chacune de 30px */
+    animation: idle-wall 0.5s steps(3) infinite; /* Animation avec 3 frames */
+}
+
+/* Animation de repos pour le mur de droite */
+#character.right-wall {
+    background-image: url("ninjaShuriken.webp"); /* Sprite d'animation de repos */
+    background-size: 90px 30px; /* Largeur totale de 3 frames, chacune de 30px */
+    animation: idle-wall 0.5s steps(3) infinite; /* Animation avec 3 frames */
+}
+
+/* Classe pour l'animation de course */
+#character.run {
+    background-image: url("ninjacourse.webp"); /* Sprite d'animation de course */
+    background-size: 180px 30px; /* Largeur totale de 6 frames, chacune de 30px */
+    animation: run-animation 0.5s steps(6) infinite; /* Animation avec 6 frames */
+}
+
+
+/* Rotation pour le mur de gauche */
+#character.run.face-down.left-wall {
+    transform: rotate(90deg);
+    transition: none;
+}
+
+/* Rotation pour le mur de droite */
+#character.run.face-up.right-wall {
+    transform: rotate(-90deg);
+    transition: none;
+}
+
+/* Rotation pour le plafond (face vers le haut) */
+#character.run.face-up.left-wall {
+    transform: rotate(90deg) scaleX(-1);
+    transition: none;
+}
+
+/* Rotation pour le sol (face vers le bas) */
+#character.run.face-down.right-wall {
+    transform: rotate(-90deg) scaleX(-1);
+    transition: none;
+}
+
+/* Définition des animations keyframes pour le repos */
+@keyframes idle-wall {
+    from { background-position: 0; }
+    to { background-position: -90px; } /* Boucle à travers les 3 frames */
+}
+
+/* Animation de défilement du sprite de course */
+@keyframes run-animation {
+    from { background-position: 0 0; }
+    to { background-position: -180px 0; } /* Position de fin pour défiler les 6 frames */
 }
 
 /* Animation pour le curseur */
